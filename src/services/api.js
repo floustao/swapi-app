@@ -20,3 +20,16 @@ export const getPeopleData = async () => {
     console.log(error);
   }
 }
+
+export const getPlanetData = async ({ planetId }) => {
+  const url = `${BASE_SWAPI_URL}/planets/${planetId}`;
+  try {
+    const apiResponse = await fetch(url)
+      .then(response => response.json())
+      .then(data => data);
+    return apiResponse;
+
+  } catch (error) {
+    console.log(error);
+  }
+}

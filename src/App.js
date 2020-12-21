@@ -1,5 +1,5 @@
 import React from 'react';
-import PeopleController from './PeopleController';
+import PeopleController from './components/PeopleController';
 
 function App() {
   return (
