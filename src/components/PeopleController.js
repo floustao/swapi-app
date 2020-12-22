@@ -1,55 +1,72 @@
 import React, { useEffect, useState } from 'react';
 import { SpinnerDotted } from 'spinners-react';
 
-import { getPeopleData, getPlanetData } from './services/api';
+import { getPeopleData, getPlanetData } from '../services/api';
 import MainTable from './MainTable';
 
 export default function PeopleController () {
   const [people, setPeople] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
   const [planetIds, setPlanetIds] = useState({});
+  const [currentUrl, setCurrentUrl] = useState('http://swapi.dev/api/people/?page=1')
 
-  // Handle fetching of characters
+  // Handle fetching of all characters
   useEffect(() => {
-    const fetchPeople = async () => {
+    const loadPeople = async () => {
       setIsFetching(true);
-      const apiResponse = await getPeopleData().then(data => data);
-        const peopleData = setPeopleData({ people: apiResponse.results });
-        
-        setPeople(peopleData);
-        setIsFetching(false);
+      const apiResponse = await getPeopleData({ url: currentUrl }).then(data => data);
+      
+      setCurrentUrl(apiResponse.next);
+      const peopleData = cleanPeopleData({ people: apiResponse.results });
+      setPeople(people => [...people, ...peopleData]);
+      setIsFetching(false);
     };
-    fetchPeople();
-  }, []);
+
+    if (currentUrl) {
+      loadPeople();
+    }
+
+  }, [currentUrl]);
 
   // Handle populating planet ids
   useEffect(() => {
     let planetIds = {};
-    people.forEach(character => {
-      const planetId = getCharacterPlanetID({ character });
-      planetIds[planetId] = planetId;
-    });
-    setPlanetIds(planetIds);
+    
+    if (people) {
+      people.forEach(character => {
+        const { homeworld } = character;
+        const planetId = getCharacterPlanetID({ homeworld });
+        planetIds[planetId] = null;
+      });
+      setPlanetIds(planetIds);
+    }
   }, [people]);
 
-  useEffect(() => {
-    const fetchPlanet = async ({ planetId }) => {
-      // setIsFetching(true);
-      const apiResponse = await getPlanetData({ planetId }).then(data => data);
-        debugger;
-        // const camelizedPeople = camelizeKeys(apiResponse.results)
-        // setPeople(camelizedPeople);
-        // setIsFetching(false);
-    };
+  // useEffect(() => {
+  //   const loadPlanet = async ({ planetId }) => {
+  //     setIsFetching(true);
+  //     const apiResponse = await getPlanetData({ planetId }).then(data => data);
+      
+  //     const newPlanetIds = {
+  //       ...planetIds,
+  //       planetId: {
+  //         planetName: apiResponse && apiResponse.name,
+  //         planetPopulation: apiResponse && apiResponse.residents && apiResponse.residents.length
+  //       }
+  //     };
 
-    people.map(character => {
+  //     setPlanetIds(newPlanetIds);
+  //     setIsFetching(false);
+  //   };
 
-      fetchPlanet({ planetId });
-    })
-  }, [planetIds]);
+  //   if (Object.keys(planetIds)) {
+  //     Object.keys(planetIds).forEach(planetId => loadPlanet({ planetId }));
+  //   }
+  // }, [planetIds]);
   
-  function getCharacterPlanetID ({ character = {} }) {
-    const { homeworld } = character;
+  function getCharacterPlanetID ({ homeworld = '' }) {
+    if (!homeworld) { return null };
+
     const planetId = homeworld
       .match(/\/(\d+)+[\/]?/g)[0]
       .replace(/\//g, "");
@@ -60,19 +77,20 @@ export default function PeopleController () {
   /**
    * Extract data we need from people.
    */
-  function setPeopleData ({ people = [] }) {
+  function cleanPeopleData ({ people = [] }) {
     if (!people.length) {
       return [];
     }
 
     const peopleData = people.map(character => {
-      const { name, birth_year } = character || {};
-      const planetId = getCharacterPlanetID({ character });
+      const { name, birth_year, homeworld } = character || {};
+      const planetId = getCharacterPlanetID({ homeworld });
       
       return {
         name,
         birthYear: birth_year,
-        planetId
+        planetId,
+        homeworld
       };
     });
 

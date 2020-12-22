@@ -11,16 +11,16 @@ export default function MainTable ({
       {people.map((character, index) => {
         const {
           birthYear,
-          homeworld,
-          name
+          name,
+          planet
         } = character || {};
 
         return (
           <CharacterCard
             key={`character-${index}`}
             birthYear={birthYear}
-            homeworld={homeworld}
             name={name}
+            planet={planet}
           />
         );
       })}
