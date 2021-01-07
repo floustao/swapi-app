@@ -4,15 +4,15 @@ import styled from 'styled-components';
 export default function CharacterCard ({
   birthYear = '',
   name = '',
-  planet = {}
+  planetName = '',
+  planetPopulation = null
 }) {
-  const { name: planetName, population } = planet || {};
   return (
     <Card>
       <div>Name: {name}</div>
       <div>Birth year: {birthYear}</div>
       <div style={{color: 'red'}}>Planet Name: {planetName}</div>
-      <div style={{color: 'red'}}>Planet pop: {population}</div>
+      <div style={{color: 'red'}}>Planet pop: {planetPopulation}</div>
     </Card>
   );
 }

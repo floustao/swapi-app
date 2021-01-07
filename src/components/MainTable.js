@@ -12,7 +12,8 @@ export default function MainTable ({
         const {
           birthYear,
           name,
-          planet
+          planetName,
+          planetPopulation
         } = character || {};
 
         return (
@@ -20,7 +21,8 @@ export default function MainTable ({
             key={`character-${index}`}
             birthYear={birthYear}
             name={name}
-            planet={planet}
+            planetName={planetName}
+            planetPopulation={planetPopulation}
           />
         );
       })}

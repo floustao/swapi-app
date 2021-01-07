@@ -33,3 +33,15 @@ export const getPlanetData = async ({ planetId = '' }) => {
     console.log(error);
   }
 }
+
+export const getAllPlanets = async () => {
+  const url = `${BASE_SWAPI_URL}/planets/`;
+
+  try {
+    const apiResponse = await axios.get(url);
+    return apiResponse.data;
+
+  } catch (error) {
+    console.log(error);
+  }
+}
