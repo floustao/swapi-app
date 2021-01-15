@@ -5,12 +5,30 @@ import { getPeopleData, getPlanetData, getAllPlanets } from '../services/api';
 import MainTable from './MainTable';
 
 export default function PeopleController () {
+  const [inFlightRequests, setInFlightRequests] = useState([]);
   const [people, setPeople] = useState({ data: [] });
   const [starWars, setStarWars] = useState({ data: [] });
   const [isFetchingPeople, setIsFetchingPeople] = useState(false);
+  const [isFetchingPlanet, setIsFetchingPlanet] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('http://swapi.dev/api/people/?page=1');
 
-  // Handle fetching of all characters
+  /**
+   * General idea:
+   * - get it working without pagination first
+   * - do it serialized, to pause and understand data structures
+   * 
+   * Step1 - get all characters:
+   * - recursive method with setCurrentUrl is prone to errors and difficult bugs to debug.
+   * - prefer do while loop instead.
+   * 
+   * Step 2 - get all planet data
+   * - loop over people and call getPlanetData
+   * - iterate over characters to build an array of planet endpoints/planetIds.
+   * - use Promise.all to fetch planets in parallel
+   * - optimize with caching to avoid duplicate planet calls.
+   * 
+   */
+  
   useEffect(() => {
     const loadPeople = async () => {
       setIsFetchingPeople(true);
@@ -34,25 +52,31 @@ export default function PeopleController () {
   useEffect(() => {
     const loadPlanet = async ({ character }) => {
       const { planetId } = character;
-      const apiResponse = await getPlanetData({ planetId }).then(data => data);
+      setInFlightRequests([...inFlightRequests, planetId]);
+      console.log(inFlightRequests)
+      if (!inFlightRequests.includes(planetId)) {
+        const apiResponse = await getPlanetData({ planetId }).then(data => data);
 
-      const charsWithCurrentPlanetId = people.data.filter(char => char.planetId === planetId );
-      const updatedCharacters = charsWithCurrentPlanetId.map(char => {
-        return {
-          ...char,
-          planetName: apiResponse && apiResponse.name,
-          planetPopulation: apiResponse && apiResponse.residents && apiResponse.residents.length
-        }
-      })
+        const charsWithCurrentPlanetId = people.data.filter(char => char.planetId === planetId );
+        const updatedCharacters = charsWithCurrentPlanetId.map(char => {
+          const planetName = apiResponse && apiResponse.name;
+          const planetPopulation = apiResponse && apiResponse.residents && apiResponse.residents.length;
+          return {
+            ...char,
+            planetName,
+            planetPopulation
+          }
+        });
 
-      const newPeople = [
-        ...people.data,
-        ...updatedCharacters
-      ];
+        const newPeople = [
+          ...people.data,
+          updatedCharacters
+        ];
 
-      setStarWars(starWars => ({
-        data: [...newPeople]
-      }));
+        setStarWars(starWars => ({
+          data: [...newPeople]
+        }));
+      };
     };
 
     if (people && people.data && people.data.length && !isFetchingPeople) {
